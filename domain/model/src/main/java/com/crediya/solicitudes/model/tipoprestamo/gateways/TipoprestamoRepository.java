@@ -1,0 +1,15 @@
+package com.crediya.solicitudes.model.tipoprestamo.gateways;
+
+import com.crediya.solicitudes.model.estado.Estado;
+import com.crediya.solicitudes.model.tipoprestamo.TipoPrestamo;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+public interface TipoprestamoRepository {
+    Mono<TipoPrestamo> guardarTipoPrestamo(Estado estado);
+
+    Mono<TipoPrestamo> obtenerTipoPrestamo(Integer id);
+
+    Flux<TipoPrestamo> obtenerTotalidadTipoPrestamos();
+}
