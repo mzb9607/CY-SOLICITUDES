@@ -3,6 +3,14 @@ server:
 spring:
   application:
     name: "CY-SOLICITUDES"
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
+  sql:
+    init:
+      mode: always
   devtools:
     add-properties: false
   h2:
@@ -11,6 +19,10 @@ spring:
       path: "/h2"
   profiles:
     include: null
+  r2dbc:
+    url: r2dbc:h2:mem:///testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
 management:
   endpoints:
     web:
@@ -22,3 +34,8 @@ management:
         enabled: true
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8080"
+
+api:
+  path:
+    base:
+      usuarios: /api/v1/solicitudes
