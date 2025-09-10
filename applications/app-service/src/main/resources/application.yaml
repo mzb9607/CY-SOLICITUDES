@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 spring:
   application:
     name: "CY-SOLICITUDES"
@@ -21,12 +21,12 @@ management:
       probes:
         enabled: true
 cors:
-  allowed-origins: "http://localhost:4200,http://localhost:8080"
+  allowed-origins: "http://localhost:4200,http://localhost:8082"
 adapters:
   r2dbc:
     mysql:
       host: localhost
       port: 3306
-      database: cy-autenticacion
+      database: cy-solicitudes
       username: root
       password: admin

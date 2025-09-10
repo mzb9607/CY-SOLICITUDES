@@ -21,7 +21,7 @@ public class TipoPrestamoData {
 
     @Id
     @Column("id_tipo_prestamo")
-    Integer idEstado;
+    Integer idTipoPrestamo;
 
     @Column("nombre")
     String nombre;

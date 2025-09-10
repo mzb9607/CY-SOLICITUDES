@@ -6,7 +6,6 @@ import com.bancolombia.crediya.r2dbc.helper.ReactiveAdapterOperations;
 import com.bancolombia.crediya.model.tipoprestamo.gateways.TipoPrestamoRepository;
 
 import reactor.core.publisher.Mono;
-import java.math.BigInteger;
 
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
@@ -15,7 +14,7 @@ import org.springframework.stereotype.Repository;
 public class TipoPrestamoReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     TipoPrestamo,
     TipoPrestamoData,
-    BigInteger, 
+    Integer, 
     TipoPrestamoReactiveRepository
 > implements TipoPrestamoRepository
 {
@@ -26,6 +25,7 @@ public class TipoPrestamoReactiveRepositoryAdapter extends ReactiveAdapterOperat
     }
 
     public Mono<TipoPrestamo> findById(Integer id) {
-        return repository.findById(BigInteger.valueOf(id)).map(this::toEntity);
+        System.err.println("Holi uwu: " + id);
+        return repository.findById(id).map(this::toEntity);
     }
 }

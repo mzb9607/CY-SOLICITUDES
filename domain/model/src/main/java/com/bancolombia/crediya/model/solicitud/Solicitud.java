@@ -1,5 +1,8 @@
-package com.bancolombia.crediya.model.estado.solicitud;
+package com.bancolombia.crediya.model.solicitud;
 import lombok.Builder;
+
+import java.math.BigInteger;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,10 +14,11 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class Solicitud {
-    Integer idSolicitud;
+    BigInteger idSolicitud;
     Double monto;
     Integer plazo;
     String email;
+    String documentoIdentidad;
     Integer idEstado;
     Integer idTipoPrestamo;
 }

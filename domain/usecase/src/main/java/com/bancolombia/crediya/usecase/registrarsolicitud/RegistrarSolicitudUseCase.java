@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-import com.bancolombia.crediya.model.estado.solicitud.Solicitud;
-import com.bancolombia.crediya.model.estado.solicitud.gateways.SolicitudRepository;
+import com.bancolombia.crediya.model.solicitud.Solicitud;
+import com.bancolombia.crediya.model.solicitud.gateways.SolicitudRepository;
 import com.bancolombia.crediya.model.tipoprestamo.gateways.TipoPrestamoRepository;
 
 @RequiredArgsConstructor
@@ -52,8 +52,11 @@ public class RegistrarSolicitudUseCase {
         if (Objects.isNull(solicitud.getEmail())) {
             validationErrors.add("email");
         }
+        if (Objects.isNull(solicitud.getDocumentoIdentidad())) {
+            validationErrors.add("documentoIdentidad");
+        }
         if (Objects.isNull(solicitud.getIdTipoPrestamo())) {
-            validationErrors.add("documento de identidad");
+            validationErrors.add("idTipoPrestamo");
         }
  
         if (!validationErrors.isEmpty()) {
@@ -64,6 +67,10 @@ public class RegistrarSolicitudUseCase {
         // Validaciones de longitud
         if (solicitud.getEmail().length() > 255) {
             return Mono.error(new IllegalArgumentException("El email no debe tener más de 255 caracteres."));
+        }
+
+        if (solicitud.getDocumentoIdentidad().length() > 20) {
+            return Mono.error(new IllegalArgumentException("El documento de identidad no debe tener más de 20 caracteres."));
         }
 
         // Validación de formato de correo electrónico

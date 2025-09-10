@@ -1,6 +1,8 @@
 package com.bancolombia.crediya.api;
 
-import com.bancolombia.crediya.model.estado.solicitud.Solicitud;
+import com.bancolombia.crediya.model.solicitud.Solicitud;
+import com.bancolombia.crediya.api.dto.SolicitudRequest;
+import com.bancolombia.crediya.api.dto.SolicitudResponse;
 import com.bancolombia.crediya.usecase.registrarsolicitud.RegistrarSolicitudUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,33 +34,44 @@ public class SolicitudController {
                     required = true,
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = Solicitud.class)
+                            schema = @Schema(implementation = SolicitudRequest.class)
                     )
             ),
             responses = {
                     @ApiResponse(responseCode = "200", description = "Solicitud registrada exitosamente",
                             content = @Content(mediaType = "application/json",
-                                    schema = @Schema(implementation = Solicitud.class))),
+                                    schema = @Schema(implementation = SolicitudResponse.class))),
                     @ApiResponse(responseCode = "400", description = "Error de validación",
                             content = @Content(mediaType = "text/plain")),
                     @ApiResponse(responseCode = "500", description = "Error interno del servidor",
                             content = @Content(mediaType = "text/plain"))
             }
     )
-    public Mono<ResponseEntity<Object>> registrarSolicitud(@RequestBody Solicitud solicitud) {
+    public Mono<ResponseEntity<SolicitudResponse>> registrarSolicitud(@RequestBody SolicitudRequest request) {
         logger.info("Request para registrar solicitud recibida.");
-        return registrarSolicitudUseCase.registrarSolicitud(solicitud)
-                .flatMap(savedRequest -> {
+        return Mono.just(request)
+                .map(req -> Solicitud.builder()
+                        .idSolicitud(req.getIdSolicitud())
+                        .monto(req.getMonto())
+                        .plazo(req.getPlazo())
+                        .email(req.getEmail())
+                        .documentoIdentidad(req.getDocumentoIdentidad())
+                        .idEstado(req.getIdEstado())
+                        .idTipoPrestamo(req.getIdTipoPrestamo())
+                        .build())
+                .flatMap(solicitud -> registrarSolicitudUseCase.registrarSolicitud(solicitud))
+                .map(savedSolicitud -> {
                     logger.info("Solicitud registrada exitosamente.");
-                    return Mono.just(ResponseEntity.ok().body((Object)savedRequest));
-                })
-                .onErrorResume(IllegalArgumentException.class, e -> {
-                    logger.error("Validation error: {}", e.getMessage());
-                    return Mono.just(ResponseEntity.badRequest().body(e.getMessage()));
-                })
-                .onErrorResume(Exception.class, e -> {
-                    logger.error("Internal server error: {}", e.getMessage());
-                    return Mono.just(ResponseEntity.status(500).body("Internal server error: " + e.getMessage()));
+                    return ResponseEntity.ok().body(SolicitudResponse.builder()
+                            .idSolicitud(savedSolicitud.getIdSolicitud())
+                            .monto(savedSolicitud.getMonto())
+                            .plazo(savedSolicitud.getPlazo())
+                            .email(savedSolicitud.getEmail())
+                            .documentoIdentidad(savedSolicitud.getDocumentoIdentidad())
+                            .idEstado(savedSolicitud.getIdEstado())
+                            .idTipoPrestamo(savedSolicitud.getIdTipoPrestamo())
+                            .build());
                 });
+                
     }
 }

@@ -1,9 +1,9 @@
 package com.bancolombia.crediya.r2dbc.adapters;
 
-import com.bancolombia.crediya.model.estado.solicitud.Solicitud;
+import com.bancolombia.crediya.model.solicitud.Solicitud;
 import com.bancolombia.crediya.r2dbc.data.SolicitudData;
 import com.bancolombia.crediya.r2dbc.helper.ReactiveAdapterOperations;
-import com.bancolombia.crediya.model.estado.solicitud.gateways.SolicitudRepository;
+import com.bancolombia.crediya.model.solicitud.gateways.SolicitudRepository;
 
 import java.math.BigInteger;
 

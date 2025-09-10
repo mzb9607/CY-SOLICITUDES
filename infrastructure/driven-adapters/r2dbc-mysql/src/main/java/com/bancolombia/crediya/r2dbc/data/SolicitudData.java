@@ -31,6 +31,9 @@ public class SolicitudData {
     @Column("email")
     String email;
 
+    @Column("documento_identidad")
+    String documentoIdentidad;
+
     @ManyToOne
     @Column("id_estado")
     Integer idEstado;
