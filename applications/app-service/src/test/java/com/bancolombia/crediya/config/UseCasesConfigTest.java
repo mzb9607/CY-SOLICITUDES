@@ -1,11 +1,14 @@
 package com.bancolombia.crediya.config;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.bancolombia.crediya.model.solicitud.gateways.SolicitudRepository;
+import com.bancolombia.crediya.model.tipoprestamo.gateways.TipoPrestamoRepository;
 
 public class UseCasesConfigTest {
 
@@ -34,6 +37,16 @@ public class UseCasesConfigTest {
         public MyUseCase myUseCase() {
             return new MyUseCase();
         }
+
+        @Bean
+        public SolicitudRepository solicitudRepository() {
+            return Mockito.mock(SolicitudRepository.class);
+        }
+
+        @Bean
+        public TipoPrestamoRepository tipoPrestamoRepository() {
+            return Mockito.mock(TipoPrestamoRepository.class);
+        }
     }
 
     static class MyUseCase {
@@ -41,4 +54,5 @@ public class UseCasesConfigTest {
             return "MyUseCase Test";
         }
     }
+    
 }
