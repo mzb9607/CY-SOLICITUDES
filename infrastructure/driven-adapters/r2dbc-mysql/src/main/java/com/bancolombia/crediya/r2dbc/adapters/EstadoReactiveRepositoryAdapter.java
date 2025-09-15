@@ -23,6 +23,10 @@ public class EstadoReactiveRepositoryAdapter extends ReactiveAdapterOperations<
     super(repository, mapper, d -> {
         return mapper.map(d, Estado.class);
     });
-}
+    }
 
+    public Mono<Estado> findById(Integer idEstado){
+        return repository.findById(BigInteger.valueOf(idEstado))
+                .map(this::toEntity);
+    }
 }

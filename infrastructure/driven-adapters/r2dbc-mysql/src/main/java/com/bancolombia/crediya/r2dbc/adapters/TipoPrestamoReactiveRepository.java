@@ -12,6 +12,5 @@ import org.springframework.data.r2dbc.repository.Query;
 
 public interface TipoPrestamoReactiveRepository extends ReactiveCrudRepository<TipoPrestamoData, Integer>, ReactiveQueryByExampleExecutor<TipoPrestamoData> {
     
-    //@Query("SELECT * FROM tipo_prestamo WHERE id_tipo_prestamo = ?")
     Mono<TipoPrestamoData> findById(Integer id);
 } 
