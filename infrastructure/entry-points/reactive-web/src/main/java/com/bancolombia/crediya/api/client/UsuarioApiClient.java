@@ -9,11 +9,11 @@ import reactor.core.publisher.Mono;
 import com.bancolombia.crediya.api.dto.UsuarioResponse;
 
 @Service
-public class UsuarioClient {
-    private static final Logger logger = LoggerFactory.getLogger(UsuarioClient.class);
+public class UsuarioApiClient {
+    private static final Logger logger = LoggerFactory.getLogger(UsuarioApiClient.class);
     private final WebClient webClient;
 
-    public UsuarioClient(WebClient.Builder webClientBuilder, @Value("${adapters.usuario-service.url}") String usuarioServiceUrl) {
+    public UsuarioApiClient(WebClient.Builder webClientBuilder, @Value("${adapters.usuario-service.url}") String usuarioServiceUrl) {
         this.webClient = webClientBuilder.baseUrl(usuarioServiceUrl).build();
     }
 

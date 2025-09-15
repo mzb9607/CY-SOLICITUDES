@@ -1,15 +1,9 @@
 package com.bancolombia.crediya.api;
 
-import com.bancolombia.crediya.api.client.UsuarioClient;
 import com.bancolombia.crediya.api.dto.SolicitudCompletaResponse;
 import com.bancolombia.crediya.api.dto.SolicitudRequest;
 import com.bancolombia.crediya.api.dto.SolicitudResponse;
-import com.bancolombia.crediya.model.estado.gateways.EstadoRepository;
 import com.bancolombia.crediya.model.solicitud.Solicitud;
-import com.bancolombia.crediya.model.tipoprestamo.TipoPrestamo;
-import com.bancolombia.crediya.model.tipoprestamo.gateways.TipoPrestamoRepository;
-import com.bancolombia.crediya.api.client.UsuarioClient;
-import com.bancolombia.crediya.api.dto.UsuarioResponse;
 import com.bancolombia.crediya.security.TokenProvider;
 import com.bancolombia.crediya.usecase.listarsolicitudes.ListarSolicitudesUseCase;
 import com.bancolombia.crediya.usecase.registrarsolicitud.RegistrarSolicitudUseCase;
@@ -29,13 +23,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import org.springframework.web.bind.annotation.RequestParam;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -47,9 +37,6 @@ public class SolicitudController {
     private final RegistrarSolicitudUseCase registrarSolicitudUseCase;
     private final ListarSolicitudesUseCase listarSolicitudesUseCase;
     private final TokenProvider tokenProvider;
-    private final EstadoRepository estadoRepository;
-    private final UsuarioClient usuarioClient;
-    private final TipoPrestamoRepository tipoPrestamoRepository;
 
 
     @PostMapping("/api/v1/solicitud")
@@ -162,97 +149,16 @@ public class SolicitudController {
             return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
         }
 
-        return listarSolicitudesUseCase.listarSolicitudesPendientes(page, size)
-                .doOnSubscribe(subscription -> logger.info("Suscripción al flujo de solicitudes pendientes."))
-                .doOnNext(solicitud -> logger.info("Procesando solicitud pendiente ID: {}", solicitud.getIdSolicitud()))
-                .flatMap(solicitud -> {
-                    logger.debug("Obteniendo datos adicionales para la solicitud ID: {}", solicitud.getIdSolicitud());
-                    Mono<UsuarioResponse> usuarioMono = usuarioClient.obtenerUsuarioPorDocumento(solicitud.getDocumentoIdentidad(), token)
-                            .doOnSuccess(user -> logger.info("Usuario obtenido exitosamente para documento: {}", solicitud.getDocumentoIdentidad()))
-                            .onErrorResume(err -> {
-                                logger.error("Error al obtener usuario para documento {}: {}", solicitud.getDocumentoIdentidad(), err.getMessage());
-                                return Mono.just(new UsuarioResponse()); // Retornar un objeto vacío para no interrumpir el flujo
-                            })
-                            .switchIfEmpty(Mono.defer(() -> {
-                                logger.warn("Usuario no encontrado para documento {}. Retornando UsuarioResponse vacío.", solicitud.getDocumentoIdentidad());
-                                return Mono.just(new UsuarioResponse());
-                            }));
-
-                    return usuarioMono.flatMap(usuario -> {
-                        logger.debug("Entrando a flatMap de usuarioMono. Usuario: {}", usuario);
-                        return buildSolicitudCompleta(solicitud, usuario.getNombres(), usuario.getApellidos(), usuario.getSalarioBase());
-                    });
-                })
-                .collectList() // Collect all SolicitudCompletaResponse into a List
-                .map(solicitudesList -> {
-                    logger.info("Finalizado el procesamiento de todas las solicitudes pendientes. Total: {}, Página: {}, Tamaño: {}", solicitudesList.size(), page, size);
-                    return ResponseEntity.ok().body(Map.of(
-                            "content", solicitudesList,
-                            "totalElements", solicitudesList.size(),
-                            "totalPages", (int) Math.ceil((double) solicitudesList.size() / size),
-                            "currentPage", page
-                    ));
-                })
-                .doOnError(error -> logger.error("Error en el flujo de listado de solicitudes: {}", error.getMessage()))
-                .onErrorResume(error -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()));
-    }
-
-    private Mono<SolicitudCompletaResponse> buildSolicitudCompleta(Solicitud solicitud, String nombres, String apellidos, Double salarioBase) {
-        logger.debug("Iniciando buildSolicitudCompleta para solicitud ID: {}, nombres: {}, apellidos: {}, salarioBase: {}",
-                solicitud.getIdSolicitud(), nombres, apellidos, salarioBase);
-
-        Mono<String> estadoMono = estadoRepository.findById(solicitud.getIdEstado())
-                .doOnNext(estado -> logger.debug("Estado encontrado para ID {}: {}", solicitud.getIdEstado(), estado.getNombre()))
-                .map(estado -> estado.getNombre())
-                .defaultIfEmpty("Desconocido")
-                .doOnNext(estadoNombre -> logger.debug("Nombre de estado final para ID {}: {}", solicitud.getIdEstado(), estadoNombre));
-
-        Mono<TipoPrestamo> tipoPrestamoMono = tipoPrestamoRepository.findById(solicitud.getIdTipoPrestamo())
-                .doOnNext(tipo -> logger.debug("TipoPrestamo encontrado para ID {}: {}", solicitud.getIdTipoPrestamo(), tipo.getNombre()))
-                .defaultIfEmpty(TipoPrestamo.builder().nombre("Desconocido").tasaInteres(0.0).build())
-                .doOnNext(tipo -> logger.debug("TipoPrestamo final para ID {}: {}", solicitud.getIdTipoPrestamo(), tipo.getNombre()));
-
-        return Mono.zip(estadoMono, tipoPrestamoMono)
-                .map(tuple -> {
-                    String nombreEstado = tuple.getT1();
-                    TipoPrestamo tipoPrestamo = tuple.getT2();
-
-                    logger.debug("Valores obtenidos de Mono.zip - nombreEstado: {}, tipoPrestamo: {}", nombreEstado, tipoPrestamo.getNombre());
-
-                    Double tasaInteres = tipoPrestamo.getTasaInteres();
-                    Double monto = solicitud.getMonto();
-                    Integer plazo = solicitud.getPlazo();
-                    Double valorCuota = null;
-
-                    logger.debug("Calculando valorCuota - monto: {}, plazo: {}, tasaInteres: {}", monto, plazo, tasaInteres);
-
-                    if (monto != null && plazo != null && tasaInteres != null && plazo > 0) {
-                        double monthlyInterestRate = tasaInteres / 12 / 100; // Assuming annual percentage rate
-                        if (monthlyInterestRate > 0) {
-                            valorCuota = (monto * monthlyInterestRate) / (1 - Math.pow(1 + monthlyInterestRate, -plazo));
-                        } else {
-                            valorCuota = monto / plazo; // If interest rate is 0
-                        }
-                    }
-                    logger.debug("Valor de cuota calculado: {}", valorCuota);
-
-                    SolicitudCompletaResponse response = SolicitudCompletaResponse.builder()
-                            .idSolicitud(solicitud.getIdSolicitud())
-                            .documentoIdentidad(solicitud.getDocumentoIdentidad())
-                            .email(solicitud.getEmail())
-                            .nombres(nombres)
-                            .apellidos(apellidos)
-                            .salario(salarioBase)
-                            .nombreTipoPrestamo(tipoPrestamo.getNombre())
-                            .monto(monto)
-                            .plazo(plazo)
-                            .tasaInteres(tasaInteres)
-                            .valorCuota(valorCuota)
-                            .nombreEstado(nombreEstado)
-                            .build();
-                    logger.debug("SolicitudCompletaResponse construida y lista para ser emitida: {}", response);
-                    return response;
-                });
+        return listarSolicitudesUseCase.listarSolicitudesPendientesCompletas(page, size, token)
+                .collectList()
+                .map(solicitudesList -> ResponseEntity.ok().body(Map.of(
+                        "content", solicitudesList,
+                        "totalElements", solicitudesList.size(),
+                        "totalPages", (int) Math.ceil((double) solicitudesList.size() / size),
+                        "currentPage", page
+                )))
+                .onErrorResume(error ->
+                        Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()));
     }
 
     private String resolveToken(ServerWebExchange exchange) {
