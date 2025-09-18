@@ -25,7 +25,6 @@ public class TipoPrestamoReactiveRepositoryAdapter extends ReactiveAdapterOperat
     }
 
     public Mono<TipoPrestamo> findById(Integer id) {
-        System.err.println("Holi uwu: " + id);
         return repository.findById(id).map(this::toEntity);
     }
 }

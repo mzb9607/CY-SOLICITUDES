@@ -21,8 +21,10 @@ management:
       probes:
         enabled: true
 cors:
-  allowed-origins: "http://localhost:4200,http://localhost:8082"
+  allowed-origins: "http://localhost:4200,http://localhost:8082,http://localhost:8080"
 adapters:
+  usuario-service:
+    url: "http://localhost:8080"
   r2dbc:
     mysql:
       host: localhost

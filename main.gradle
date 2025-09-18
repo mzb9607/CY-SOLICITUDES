@@ -71,6 +71,11 @@ subprojects {
         jvmArgs = ["-XX:+AllowRedefinitionToAddDeleteMethods"]
     }
 
+    tasks.withType(JavaCompile).configureEach {
+        options.compilerArgs.add("-parameters")
+        options.compilerArgs.add("-Amapstruct.suppressGeneratorTimestamp=true")
+    }
+
     jacocoTestReport {
         dependsOn test, 'pitest'
         reports {

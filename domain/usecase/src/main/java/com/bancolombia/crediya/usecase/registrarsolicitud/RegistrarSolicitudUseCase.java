@@ -7,6 +7,8 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import com.bancolombia.crediya.model.solicitud.Solicitud;
@@ -18,13 +20,17 @@ public class RegistrarSolicitudUseCase {
 
     private final SolicitudRepository solicitudRepository;
     private final TipoPrestamoRepository tipoPrestamoRepository;
+    private static final Logger logger = Logger.getLogger(RegistrarSolicitudUseCase.class.getName());
 
 
     public Mono<Solicitud> registrarSolicitud(Solicitud solicitud) {
+        logger.info("Iniciando registro de solicitud para el cliente con documento: " + solicitud.getDocumentoIdentidad());
         return validarSolicitud(solicitud)
                 .flatMap(this::validarTipoPrestamoExistente)
                 .doOnNext(s -> s.setIdEstado(1))
-                .flatMap(solicitudRepository::save);
+                .flatMap(solicitudRepository::save)
+                .doOnSuccess(s -> logger.info("Solicitud registrada con éxito con el id: " + s.getIdSolicitud()))
+                .doOnError(e -> logger.log(Level.SEVERE, "Error al registrar la solicitud: " + e.getMessage(), e));
     }
 
     public Mono<Solicitud> validarTipoPrestamoExistente(Solicitud solicitud) {

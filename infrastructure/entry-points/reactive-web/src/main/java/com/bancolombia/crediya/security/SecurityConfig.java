@@ -40,7 +40,6 @@ public class SecurityConfig {
                 )
                 // Define authorization rules
                 .authorizeExchange(exchanges -> exchanges
-                        // Allow public access to Swagger UI and API docs
                         .pathMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/webjars/**").permitAll()
                         // All other requests must be authenticated
                         .anyExchange().authenticated()

@@ -8,6 +8,7 @@ import io.r2dbc.spi.ConnectionFactoryOptions;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import io.r2dbc.spi.Option;
 import java.time.Duration;
 
 import static io.r2dbc.spi.ConnectionFactoryOptions.*;
@@ -28,6 +29,7 @@ public class MySQLConnectionPool {
                 .option(DATABASE, properties.database())
                 .option(USER, properties.username())
                 .option(PASSWORD, properties.password())
+                .option(Option.valueOf("authentication_plugin"), "caching_sha2_password")
                 .build();
 
         ConnectionFactory connectionFactory = ConnectionFactories.get(options);

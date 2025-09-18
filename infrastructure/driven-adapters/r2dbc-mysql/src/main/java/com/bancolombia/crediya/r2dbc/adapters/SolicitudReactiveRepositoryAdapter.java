@@ -8,7 +8,9 @@ import com.bancolombia.crediya.model.solicitud.gateways.SolicitudRepository;
 import java.math.BigInteger;
 
 import org.reactivecommons.utils.ObjectMapper;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 
 @Repository
 public class SolicitudReactiveRepositoryAdapter extends ReactiveAdapterOperations<
@@ -22,6 +24,11 @@ public class SolicitudReactiveRepositoryAdapter extends ReactiveAdapterOperation
     super(repository, mapper, d -> {
         return mapper.map(d, Solicitud.class);
     });
-}
+    }
 
+    @Override
+    public Flux<Solicitud> findByIdEstado(Integer idEstado, int page, int size) {
+        return repository.findByIdEstado(idEstado, PageRequest.of(page, size))
+                .map(this::toEntity);
+    }
 }

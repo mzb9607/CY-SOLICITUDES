@@ -34,11 +34,9 @@ public class SolicitudData {
     @Column("documento_identidad")
     String documentoIdentidad;
 
-    @ManyToOne
     @Column("id_estado")
     Integer idEstado;
 
-    @ManyToOne
     @Column("id_tipo_prestamo")
     Integer idTipoPrestamo;
     

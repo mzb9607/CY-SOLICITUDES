@@ -35,3 +35,7 @@ sonar {
 }
 
 apply from: './main.gradle'
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs.add("-parameters")
+}
