@@ -16,12 +16,15 @@ import java.util.logging.Logger;
 
 @RequiredArgsConstructor
 public class ListarSolicitudesUseCase {
+    private static final Logger logger = Logger.getLogger(ListarSolicitudesUseCase.class.getName());
+
     private final SolicitudRepository solicitudRepository;
     private final UsuarioClientRepository usuarioClientRepository;
     private final EstadoRepository estadoRepository;
     private final TipoPrestamoRepository tipoPrestamoRepository;
 
     public Flux<SolicitudCompleta> listarSolicitudesPendientesCompletas(int page, int size, String token) {
+        logger.log(Level.INFO, "Iniciando listarSolicitudesPendientesCompletas con page: {0}, size: {1}, token: {2}", new Object[]{page, size, token});
         return solicitudRepository.findByIdEstado(1, page, size)
                 .flatMap(solicitud ->
                         usuarioClientRepository.obtenerUsuarioPorDocumento(solicitud.getDocumentoIdentidad(), token)
@@ -30,12 +33,15 @@ public class ListarSolicitudesUseCase {
                             buildSolicitudCompleta(solicitud, usuario.getNombres(), 
                                 usuario.getApellidos(), usuario.getSalarioBase())
                         )
-                );
+                )
+                .doOnComplete(() -> logger.log(Level.INFO, "Finalizado listarSolicitudesPendientesCompletas."));
     }
 
     private Mono<SolicitudCompleta> buildSolicitudCompleta(
         com.bancolombia.crediya.model.solicitud.Solicitud solicitud, 
         String nombres, String apellidos, Double salarioBase) {
+        logger.log(Level.INFO, "Iniciando buildSolicitudCompleta para solicitud ID: {0}, nombres: {1}, apellidos: {2}, salarioBase: {3}", 
+            new Object[]{solicitud.getIdSolicitud(), nombres, apellidos, salarioBase});
         
         return Mono.zip(
             estadoRepository.findById(solicitud.getIdEstado())
@@ -67,7 +73,8 @@ public class ListarSolicitudesUseCase {
                 .valorCuota(valorCuota)
                 .nombreEstado(nombreEstado)
                 .build();
-        });
+        })
+        .doOnNext(solicitudCompleta -> logger.log(Level.INFO, "Finalizado buildSolicitudCompleta, SolicitudCompleta: {0}", solicitudCompleta));
     }
 
     private Double calcularValorCuota(Double monto, Integer plazo, Double tasaInteres) {

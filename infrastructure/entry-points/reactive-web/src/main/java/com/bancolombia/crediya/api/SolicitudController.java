@@ -149,16 +149,26 @@ public class SolicitudController {
             return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
         }
 
+        logger.info("Llamando a listarSolicitudesPendientesCompletas con page: {}, size: {}", page, size);
         return listarSolicitudesUseCase.listarSolicitudesPendientesCompletas(page, size, token)
                 .collectList()
-                .map(solicitudesList -> ResponseEntity.ok().body(Map.of(
+                .doOnNext(solicitudesList -> logger.info("Se encontraron {} solicitudes pendientes.", solicitudesList.size()))
+                .map(solicitudesList -> {
+                    int totalElements = solicitudesList.size();
+                    int totalPages = (int) Math.ceil((double) totalElements / size);
+                    logger.info("Mapeando respuesta: totalElements={}, totalPages={}, currentPage={}", totalElements, totalPages, page);
+                    return ResponseEntity.ok().body(Map.of(
                         "content", solicitudesList,
-                        "totalElements", solicitudesList.size(),
-                        "totalPages", (int) Math.ceil((double) solicitudesList.size() / size),
+                        "totalElements", totalElements,
+                        "totalPages", totalPages,
                         "currentPage", page
-                )))
-                .onErrorResume(error ->
-                        Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()));
+                    ));
+                })
+                .doOnError(error -> logger.error("Error al listar solicitudes pendientes: {}", error.getMessage(), error))
+                .onErrorResume(error -> {
+                    logger.error("Error inesperado al listar solicitudes pendientes, devolviendo 500.", error);
+                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Error interno del servidor: " + error.getMessage())));
+                });
     }
 
     private String resolveToken(ServerWebExchange exchange) {
