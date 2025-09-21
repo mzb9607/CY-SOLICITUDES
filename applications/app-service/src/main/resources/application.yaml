@@ -1,5 +1,5 @@
 server:
-  port: 8081
+  port: 8082
 spring:
   application:
     name: "CY-SOLICITUDES"
@@ -11,6 +11,10 @@ spring:
       path: "/h2"
   profiles:
     include: null
+  data:
+    redis:
+      host: "${SPRING_DATA_REDIS_HOST:localhost}"
+      port: "${SPRING_DATA_REDIS_PORT:6379}"
 management:
   endpoints:
     web:
@@ -22,13 +26,26 @@ management:
         enabled: true
 cors:
   allowed-origins: "http://localhost:4200,http://localhost:8082,http://localhost:8080"
+cloud:
+  aws:
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID:}
+      secret-key: ${AWS_SECRET_ACCESS_KEY:}
+    region:
+      static: us-east-2
+    stack:
+      auto: false
 adapters:
   usuario-service:
     url: "http://localhost:8080"
   r2dbc:
     mysql:
-      host: localhost
+      host: "localhost"
       port: 3306
-      database: cy-solicitudes
-      username: root
-      password: admin
+      database: "cy-solicitudes"
+      username: "root"
+      password: "admin"
+  sqs:
+    region: "us-east-2"
+    queueUrl: "https://sqs.us-east-2.amazonaws.com/278626299419/CREDIYA-Notificaciones_Cambio_Estado"
+    profile-name: "credi-ya"

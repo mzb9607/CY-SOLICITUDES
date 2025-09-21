@@ -1,11 +1,13 @@
 package com.bancolombia.crediya.api;
 
+import com.bancolombia.crediya.api.dto.ActualizarEstadoSolicitud;
 import com.bancolombia.crediya.api.dto.SolicitudCompletaResponse;
 import com.bancolombia.crediya.api.dto.SolicitudRequest;
 import com.bancolombia.crediya.api.dto.SolicitudResponse;
 import com.bancolombia.crediya.model.solicitud.Solicitud;
 import com.bancolombia.crediya.security.TokenProvider;
 import com.bancolombia.crediya.usecase.listarsolicitudes.ListarSolicitudesUseCase;
+import com.bancolombia.crediya.usecase.orquestadoractualizacionestado.OrquestadorActualizacionEstadoUseCase;
 import com.bancolombia.crediya.usecase.registrarsolicitud.RegistrarSolicitudUseCase;
 import io.jsonwebtoken.Claims;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,6 +38,7 @@ public class SolicitudController {
     private static final Logger logger = LoggerFactory.getLogger(SolicitudController.class);
     private final RegistrarSolicitudUseCase registrarSolicitudUseCase;
     private final ListarSolicitudesUseCase listarSolicitudesUseCase;
+    private final OrquestadorActualizacionEstadoUseCase orquestadorActualizacionEstadoUseCase;
     private final TokenProvider tokenProvider;
 
 
@@ -115,6 +118,22 @@ public class SolicitudController {
                 .doOnError(error -> logger.error("Error al registrar la solicitud: {}", error.getMessage()))
                 .onErrorResume(error -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()));
 
+    }
+
+    @PostMapping("/api/v1/actualizar_estado_solicitud")
+    public Mono<ResponseEntity<SolicitudResponse>> actualizarEstadoDeSolicitud(@RequestBody ActualizarEstadoSolicitud request) {
+        return orquestadorActualizacionEstadoUseCase.actualizarEstadoYNotificar(request.getIdSolicitud(), request.getIdEstado())
+                .map(updatedSolicitud -> ResponseEntity.ok().body(SolicitudResponse.builder()
+                        .idSolicitud(updatedSolicitud.getIdSolicitud())
+                        .monto(updatedSolicitud.getMonto())
+                        .plazo(updatedSolicitud.getPlazo())
+                        .email(updatedSolicitud.getEmail())
+                        .documentoIdentidad(updatedSolicitud.getDocumentoIdentidad())
+                        .idEstado(updatedSolicitud.getIdEstado())
+                        .idTipoPrestamo(updatedSolicitud.getIdTipoPrestamo())
+                        .build()))
+                .doOnError(error -> logger.error("Error al actualizar el estado de la solicitud: {}", error.getMessage()))
+                .onErrorResume(error -> Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()));
     }
 
     @GetMapping("/api/v1/solicitud")

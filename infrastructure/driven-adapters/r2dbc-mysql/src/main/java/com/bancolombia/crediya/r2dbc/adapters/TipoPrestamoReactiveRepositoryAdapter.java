@@ -5,6 +5,7 @@ import com.bancolombia.crediya.r2dbc.data.TipoPrestamoData;
 import com.bancolombia.crediya.r2dbc.helper.ReactiveAdapterOperations;
 import com.bancolombia.crediya.model.tipoprestamo.gateways.TipoPrestamoRepository;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.reactivecommons.utils.ObjectMapper;
@@ -26,5 +27,10 @@ public class TipoPrestamoReactiveRepositoryAdapter extends ReactiveAdapterOperat
 
     public Mono<TipoPrestamo> findById(Integer id) {
         return repository.findById(id).map(this::toEntity);
+    }
+
+    @Override
+    public Flux<TipoPrestamo> findAll() {
+        return repository.findAll().map(this::toEntity);
     }
 }

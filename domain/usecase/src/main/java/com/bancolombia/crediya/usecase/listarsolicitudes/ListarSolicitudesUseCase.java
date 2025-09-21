@@ -1,9 +1,9 @@
 package com.bancolombia.crediya.usecase.listarsolicitudes;
 
-import com.bancolombia.crediya.model.estado.gateways.EstadoRepository;
+import com.bancolombia.crediya.model.estado.gateways.EstadoRedisRepository;
 import com.bancolombia.crediya.model.solicitud.gateways.SolicitudRepository;
 import com.bancolombia.crediya.model.tipoprestamo.TipoPrestamo;
-import com.bancolombia.crediya.model.tipoprestamo.gateways.TipoPrestamoRepository;
+import com.bancolombia.crediya.model.tipoprestamo.gateways.TipoPrestamoRedisRepository;
 import com.bancolombia.crediya.model.usuarioclient.UsuarioClient;
 import com.bancolombia.crediya.model.usuarioclient.gateways.UsuarioClientRepository;
 import com.bancolombia.crediya.usecase.listarsolicitudes.dto.SolicitudCompleta;
@@ -20,8 +20,8 @@ public class ListarSolicitudesUseCase {
 
     private final SolicitudRepository solicitudRepository;
     private final UsuarioClientRepository usuarioClientRepository;
-    private final EstadoRepository estadoRepository;
-    private final TipoPrestamoRepository tipoPrestamoRepository;
+    private final EstadoRedisRepository estadoRedisRepository;
+    private final TipoPrestamoRedisRepository tipoPrestamoRedisRepository;
 
     public Flux<SolicitudCompleta> listarSolicitudesPendientesCompletas(int page, int size, String token) {
         logger.log(Level.INFO, "Iniciando listarSolicitudesPendientesCompletas con page: {0}, size: {1}, token: {2}", new Object[]{page, size, token});
@@ -44,10 +44,10 @@ public class ListarSolicitudesUseCase {
             new Object[]{solicitud.getIdSolicitud(), nombres, apellidos, salarioBase});
         
         return Mono.zip(
-            estadoRepository.findById(solicitud.getIdEstado())
+            estadoRedisRepository.findEstadoById(solicitud.getIdEstado())
                 .map(estado -> estado.getNombre())
                 .defaultIfEmpty("Desconocido"),
-            tipoPrestamoRepository.findById(solicitud.getIdTipoPrestamo())
+            tipoPrestamoRedisRepository.findTipoPrestamoById(solicitud.getIdTipoPrestamo())
                 .defaultIfEmpty(TipoPrestamo.builder().nombre("Desconocido").tasaInteres(0.0).build())
         ).map(tuple -> {
             String nombreEstado = tuple.getT1();

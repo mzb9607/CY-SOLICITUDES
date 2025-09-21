@@ -5,6 +5,7 @@ import com.bancolombia.crediya.r2dbc.data.EstadoData;
 import com.bancolombia.crediya.r2dbc.helper.ReactiveAdapterOperations;
 import com.bancolombia.crediya.model.estado.gateways.EstadoRepository;
 
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import java.math.BigInteger;
 
@@ -27,6 +28,12 @@ public class EstadoReactiveRepositoryAdapter extends ReactiveAdapterOperations<
 
     public Mono<Estado> findById(Integer idEstado){
         return repository.findById(BigInteger.valueOf(idEstado))
+                .map(this::toEntity);
+    }
+
+    @Override
+    public Flux<Estado> findAll() {
+        return repository.findAll()
                 .map(this::toEntity);
     }
 }
